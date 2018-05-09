@@ -1,5 +1,6 @@
 package com.mobitribe.wheelsonfire.main;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 
 import com.mobitribe.wheelsonfire.R;
 import com.mobitribe.wheelsonfire.databinding.ActivityMainBinding;
+import com.mobitribe.wheelsonfire.model.Billing;
 import com.mobitribe.wheelsonfire.model.Category;
 import com.mobitribe.wheelsonfire.model.Product;
 import com.mobitribe.wheelsonfire.network.NetworkContants;
@@ -31,9 +33,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
-    ArrayList<Category> categories;
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    public ArrayList<Product> cartProducts;
+
     ActivityMainBinding binding;
     private ProductAdapter adapter;
 
@@ -42,15 +44,20 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         // setContentView(R.layout.activity_main);
         binding = DataBindingUtil.setContentView(this,R.layout.activity_main);
-
+        cartProducts = new ArrayList<>();
         setSupportActionBar(binding.appBarMain.toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+
+                Bundle b = new Bundle();
+                Intent i = new Intent(MainActivity.this,CartActivity.class);
+                b.putSerializable("Cart", cartProducts);
+
+                i.putExtras(b);
+                startActivity(i);
             }
         });
 
@@ -64,14 +71,13 @@ public class MainActivity extends AppCompatActivity
         initializeRecyclerView();
         fetchData();
     }
-    int page =1;
-    int productpage =1;
+
     private void fetchCategory(){
 
         HashMap params = new HashMap();
         params.put("consumer_key", NetworkContants.CONSUMER_KEY);
         params.put("consumer_secret",NetworkContants.CONSUMER_SECRET);
-        params.put("page",page);
+        params.put("per_page",50);
         RestClient.getRestAdapter().getListOfCategory(params).enqueue(new Callback<ArrayList<Category>>() {
             @Override
             public void onResponse(Call<ArrayList<Category>> call, Response<ArrayList<Category>> response) {
@@ -80,12 +86,17 @@ public class MainActivity extends AppCompatActivity
                     Menu m = navigationView.getMenu();
                     for(Category category : response.body()) {
                        if(category.getParent()==0){
-                        m.add(category.getName());}
+                        m.add(category.getName()).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                            @Override
+                            public boolean onMenuItemClick(MenuItem item) {
+                                Intent i = new Intent(MainActivity.this, CartActivity.class);
+                                startActivity(i);
+                                return false;
+                            }
+                        });}
 
                     }
-                    page++;
-                    fetchCategory();
-                }
+                                    }
 
 
                 }
@@ -93,7 +104,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onFailure(Call<ArrayList<Category>> call, Throwable t) {
-                page =1;
+
             }
         });
     }
@@ -102,23 +113,19 @@ public class MainActivity extends AppCompatActivity
         HashMap params = new HashMap();
         params.put("consumer_key", NetworkContants.CONSUMER_KEY);
         params.put("consumer_secret",NetworkContants.CONSUMER_SECRET);
-        params.put("page",productpage);
+        params.put("per_page",100);
         RestClient.getRestAdapter().getListOfProducts(params).enqueue(new Callback<ArrayList<Product>>() {
             @Override
             public void onResponse(Call<ArrayList<Product>> call, Response<ArrayList<Product>> response) {
                 if (response.isSuccessful())
                 {
                     adapter.swap(response.body());
-                    productpage++;
-
-                    fetchData();
-
                 }
             }
 
             @Override
             public void onFailure(Call<ArrayList<Product>> call, Throwable t) {
-                productpage =1;
+
             }
         });
 

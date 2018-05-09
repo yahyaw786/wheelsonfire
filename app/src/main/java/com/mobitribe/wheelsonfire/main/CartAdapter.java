@@ -7,33 +7,33 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.mobitribe.wheelsonfire.R;
-import com.mobitribe.wheelsonfire.databinding.ProductListItemBinding;
+import com.mobitribe.wheelsonfire.databinding.ActivityCartBinding;
+import com.mobitribe.wheelsonfire.databinding.ProductCartItemBinding;
 import com.mobitribe.wheelsonfire.model.Category;
 import com.mobitribe.wheelsonfire.model.Product;
 
 import java.util.ArrayList;
 
 
-public class ProductAdapter extends RecyclerView.Adapter<ProductViewHolder> {
+public class CartAdapter extends RecyclerView.Adapter<CartViewHolder> {
     private ArrayList<Product> products;
-    private MainActivity activity;
+    private CartActivity activity;
 
 
-    public ProductAdapter(ArrayList<Product> products, MainActivity activity) {
+    public CartAdapter(ArrayList<Product> products, CartActivity activity) {
         this.products = products;
         this.activity = activity;
     }
 
     @Override
-    public ProductViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        ProductListItemBinding databing =
-                DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.product_list_item,parent,false);
-        return new ProductViewHolder(databing, activity);
+    public CartViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        ProductCartItemBinding databing =
+                DataBindingUtil.inflate(LayoutInflater.from(activity), R.layout.product_cart_item,parent,false);
+        return new CartViewHolder(databing, activity);
 
     }
-
     @Override
-    public void onBindViewHolder(ProductViewHolder holder, int position) {
+    public void onBindViewHolder(CartViewHolder holder, int position) {
         holder.bindData(products.get(position));
     }
 
@@ -48,8 +48,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductViewHolder> {
      */
     public void swap(ArrayList<Product> data) {
 
-        if (data==null)
-        {
+        if (data==null) {
             data = new ArrayList<>();
         }
         products.addAll(data);

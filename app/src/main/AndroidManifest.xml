@@ -24,7 +24,12 @@
         <activity
             android:name=".main.MainActivity"
             android:label="@string/title_activity_home"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".main.CartActivity"
+            android:label="@string/title_activity_cart"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".main.CheckoutActivity"></activity>
     </application>
 
 </manifest>

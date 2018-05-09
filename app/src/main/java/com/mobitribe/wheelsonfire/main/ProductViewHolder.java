@@ -9,29 +9,35 @@ import com.mobitribe.wheelsonfire.databinding.ProductListItemBinding;
 import com.mobitribe.wheelsonfire.model.Product;
 import com.squareup.picasso.Picasso;
 
-/**
- * Author: Uzair Qureshi
- * Date:  11/9/17.
- * Description:
- */
 
 public class ProductViewHolder extends RecyclerView.ViewHolder {
     private ProductListItemBinding binding;
-    private Activity activity;
-
-    public ProductViewHolder(ProductListItemBinding productListItemBinding, Activity activity){
+    private MainActivity activity;
+    public ProductViewHolder(ProductListItemBinding productListItemBinding, MainActivity activity){
         super(productListItemBinding.getRoot());
         this.binding = productListItemBinding;
         this.activity = activity;
     }
 
-    public void bindData(Product product) {
-       binding.name.setText(product.getName());
+    public void bindData(final Product product) {
+        binding.name.setText(product.getName());
+
        binding.price.setText("RS. " +product.getPrice());
        Picasso.with(activity).
                 load(product.getImages().get(0).getSrc()).
                 placeholder(R.drawable.y_profile_photo).fit().
                 into(binding.businessImage);
-
+        binding.addToCart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.cartProducts.add(product);
+            }
+        });
+        binding.productCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.cartProducts.add(product);
+            }
+        });
     }
 }

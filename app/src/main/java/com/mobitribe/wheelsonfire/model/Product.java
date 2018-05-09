@@ -1,8 +1,9 @@
 package com.mobitribe.wheelsonfire.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Product {
+public class Product implements Serializable{
 
 private Integer id;
 private String name;
@@ -599,7 +600,7 @@ public void set_links(Links _links) {
 this._links = _links;
 }
 
-    public class Links {
+    public class Links implements Serializable{
 
         private List<Self> self = null;
         private List<Collection> collection = null;
@@ -622,7 +623,7 @@ this._links = _links;
 
     }
 
-    public class Self {
+    public class Self implements Serializable {
 
         private String href;
 
@@ -636,7 +637,7 @@ this._links = _links;
 
     }
 
-    public class Image {
+    public class Image implements Serializable {
 
         private Integer id;
         private String date_created;
@@ -722,7 +723,7 @@ this._links = _links;
 
     }
 
-    public class Attribute {
+    public class Attribute implements Serializable{
 
         private Integer id;
         private String name;
@@ -782,7 +783,7 @@ this._links = _links;
     }
 
 
-    public class Category {
+    public class Category implements Serializable {
 
         private Integer id;
         private String name;
@@ -815,7 +816,7 @@ this._links = _links;
     }
 
 
-    public class Collection {
+    public class Collection implements Serializable{
 
         private String href;
 
@@ -830,7 +831,7 @@ this._links = _links;
     }
 
 
-    public class Dimensions {
+    public class Dimensions implements Serializable{
 
         private String length;
         private String width;
