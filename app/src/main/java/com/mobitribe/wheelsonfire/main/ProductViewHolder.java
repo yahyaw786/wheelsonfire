@@ -1,12 +1,15 @@
 package com.mobitribe.wheelsonfire.main;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.mobitribe.wheelsonfire.R;
 import com.mobitribe.wheelsonfire.databinding.ProductListItemBinding;
 import com.mobitribe.wheelsonfire.model.Product;
+import com.mobitribe.wheelsonfire.main.MainActivity;
 import com.squareup.picasso.Picasso;
 
 
@@ -36,7 +39,8 @@ public class ProductViewHolder extends RecyclerView.ViewHolder {
         binding.productCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.cartProducts.add(product);
+                Intent intent = new Intent(activity ,ProductActivity.class);
+                v.getContext().startActivity(intent);
             }
         });
     }

@@ -3,8 +3,10 @@ package com.mobitribe.wheelsonfire.main;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.SubMenu;
@@ -17,6 +19,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AbsListView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.mobitribe.wheelsonfire.R;
 import com.mobitribe.wheelsonfire.databinding.ActivityMainBinding;
@@ -35,10 +40,12 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public ArrayList<Product> cartProducts;
-
+    int page =1;
     ActivityMainBinding binding;
     private ProductAdapter adapter;
-
+    Boolean isScrolling = false;
+    int currentItems,scrollOutItems,totalItems;
+    ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         binding = DataBindingUtil.setContentView(this,R.layout.activity_main);
         cartProducts = new ArrayList<>();
         setSupportActionBar(binding.appBarMain.toolbar);
+        progressBar = (ProgressBar)findViewById(R.id.progress);
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -67,8 +76,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
         fetchCategory();
-
         initializeRecyclerView();
+
         fetchData();
     }
 
@@ -79,24 +88,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         params.put("consumer_secret",NetworkContants.CONSUMER_SECRET);
         params.put("per_page",50);
         RestClient.getRestAdapter().getListOfCategory(params).enqueue(new Callback<ArrayList<Category>>() {
+            NavigationView navigationView= (NavigationView)findViewById(R.id.nav_view);
             @Override
             public void onResponse(Call<ArrayList<Category>> call, Response<ArrayList<Category>> response) {
+
                 if (response.isSuccessful()) {
-                    NavigationView navigationView= (NavigationView)findViewById(R.id.nav_view);
+
                     Menu m = navigationView.getMenu();
-                    for(Category category : response.body()) {
-                       if(category.getParent()==0){
-                        m.add(category.getName()).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                            @Override
-                            public boolean onMenuItemClick(MenuItem item) {
-                                Intent i = new Intent(MainActivity.this, CartActivity.class);
-                                startActivity(i);
-                                return false;
-                            }
-                        });}
+                    for (Category category : response.body()) {
+                        if (category.getParent() == 0) {
+                            m.add(category.getName());
+                        }
 
                     }
-                                    }
+
+
+                }
 
 
                 }
@@ -109,25 +116,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
     private void fetchData() {
-
-        HashMap params = new HashMap();
+        progressBar.setVisibility(View.VISIBLE);
+        final HashMap params = new HashMap();
         params.put("consumer_key", NetworkContants.CONSUMER_KEY);
         params.put("consumer_secret",NetworkContants.CONSUMER_SECRET);
-        params.put("per_page",100);
-        RestClient.getRestAdapter().getListOfProducts(params).enqueue(new Callback<ArrayList<Product>>() {
-            @Override
-            public void onResponse(Call<ArrayList<Product>> call, Response<ArrayList<Product>> response) {
-                if (response.isSuccessful())
-                {
-                    adapter.swap(response.body());
-                }
-            }
+        params.put("per_page",15);
 
+        new Handler().postDelayed(new Runnable() {
             @Override
-            public void onFailure(Call<ArrayList<Product>> call, Throwable t) {
+            public void run() {
+                params.put("page",page);
+                RestClient.getRestAdapter().getListOfProducts(params).enqueue(new Callback<ArrayList<Product>>() {
+                    @Override
+                    public void onResponse(Call<ArrayList<Product>> call, Response<ArrayList<Product>> response) {
+                        if (response.isSuccessful())
+                        {
+                            adapter.swap(response.body());
+                        }
+                        page++;
+                        progressBar.setVisibility(View.GONE);
+                    }
 
+                    @Override
+                    public void onFailure(Call<ArrayList<Product>> call, Throwable t) {
+
+                    }
+                });
             }
-        });
+        },5000);
+
 
     }
 
@@ -145,32 +162,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      * @usage It initialize the recycler view
      */
     private void initializeRecyclerView() {
-        binding.appBarMain.contentMain.productList.setLayoutManager(new LinearLayoutManager(this));
+        final GridLayoutManager manager = new GridLayoutManager(this, 3);
+        binding.appBarMain.contentMain.productList.setLayoutManager(manager);
         adapter = new ProductAdapter(new ArrayList<Product>(), this);
         binding.appBarMain.contentMain.productList.setAdapter(adapter);
+        binding.appBarMain.contentMain.productList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if(newState== AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL){
+                    isScrolling= true;
+                }
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                currentItems= manager.getChildCount();
+                totalItems = manager.getItemCount();
+                scrollOutItems = manager.findFirstCompletelyVisibleItemPosition();
+                if(isScrolling && (currentItems + scrollOutItems == totalItems)){
+                    isScrolling = false;
+                    fetchData();
+                }
+            }
+        });
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+////        getMenuInflater().inflate(R.menu.main, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
